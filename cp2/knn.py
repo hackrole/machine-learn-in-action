@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring,redefined-builtin,wildcard-import
 # pylint: disable=unused-wildcard-import,
+import os
 import operator
 
 import matplotlib
@@ -120,3 +121,54 @@ def classify_person():
     inarr = array([mile, tats, cream])
     result = classify0((inarr - min_vals) / ranges, norm_data, labels, 3)
     print("you will probably like this person: ", results[result - 1])
+
+
+def img2vector(filename):
+    """
+    turn image to vector array
+    """
+    vect = zeros((1, 1024))
+    fp = open(filename)
+    for i in range(32):
+        line = fp.readline()
+        for j in range(32):
+            vect[0, 32*i + j] = int(line[j])
+
+    return vect
+
+
+def test_handlewrite():
+    """
+    handle write ML
+    """
+    labels = []
+    train_files = os.listdir("./trainingDigits")
+    train_num = len(train_files)
+    train_data = zeros((train_num, 1024))
+
+    for i in range(train_num):
+        filename = train_files[i]
+        name = filename.split('.')[0]
+        label = int(name.split('_')[0])
+
+        labels.append(label)
+        train_data[i, :]  = img2vector('./trainingDigits/%s' % filename)
+
+    test_files = os.listdir("./testDigits")
+    error_count = 0.0
+    test_num = len(test_files)
+
+    for i in range(test_num):
+        filename = test_files[i]
+        name = filename.split('.')[0]
+        label = int(name.split('_')[0])
+        data = img2vector('./testDigits/%s' % filename)
+
+        result = classify0(data, train_data, labels, 3)
+        print("the classifier came back with: %d, the real answer is: %d" % (
+            result, label))
+        if result != label:
+            error_count += 1.0
+
+    print("the total error num is %d" % error_count)
+    print("the error rate is %f" % (error_count / test_num))
